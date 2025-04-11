@@ -1,0 +1,30 @@
+name: Deploy with Nix
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Build with Nix
+        run: |
+          nix build .#defaultPackage.x86_64-linux
+          mkdir dist
+          cp -r result/* dist/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: thatoneaitooltogeneratepdf
+          directory: dist
+
